@@ -34,27 +34,38 @@ export interface AuthResponse {
 
 export interface Booking {
   _id: string;
-  user: string | User;
+  userId: string | User;
   type: 'hotel' | 'experience';
-  hotel?: {
-    _id: string;
-    name: string;
-    location: Location;
-    image: string;
-  };
-  experience?: {
-    _id: string;
-    title: string;
-    location: Location;
-    image: string;
-  };
+  itemId: string | Experience | Hotel;
   startDate: Date;
-  endDate: Date;
-  guests: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  totalPrice: number;
+  endDate?: Date;
+  guests: {
+    adults: number;
+    children: number;
+  };
+  rooms?: {
+    roomType: string;
+    quantity: number;
+  }[];
+  amount: {
+    subtotal: number;
+    taxes: number;
+    total: number;
+    currency: string;
+  };
+  paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
+  bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  cancellation?: {
+    date: Date;
+    reason: string;
+    refundAmount: number;
+  };
+  specialRequests?: string;
   createdAt: Date;
-  updatedAt: Date;
+  // For backward compatibility
+  user?: string | User;
+  status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  totalPrice?: number;
 }
 
 export interface ApiResponse<T> {
@@ -169,6 +180,75 @@ export interface Experience {
   rating: number;
   reviews: Review[];
   tags: string[];
+  status?: 'active' | 'inactive' | 'draft';
+}
+
+export interface Guide {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  location: Location;
+  speciality: string;
+  languages: string[];
+  experience: string;
+  rating: number;
+  reviews: Review[];
+  pricePerDay: number;
+  availability: {
+    dates: Date[];
+    timeSlots: string[];
+  };
+  certifications: string[];
+  tours: number;
+  bio: string;
+  isVerified: boolean;
+}
+
+export interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  category: string;
+  artisan: {
+    _id: string;
+    name: string;
+    location: Location;
+    bio: string;
+  };
+  price: {
+    amount: number;
+    currency: string;
+    originalPrice?: number;
+  };
+  images: string[];
+  stock: number;
+  rating: number;
+  reviews: Review[];
+  tags: string[];
+  isAuthentic: boolean;
+  shipping: {
+    free: boolean;
+    cost: number;
+    time: string;
+  };
+}
+
+export interface SearchFilters {
+  query?: string;
+  state?: string;
+  date?: string;
+  categories?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  amenities?: string[];
+  rating?: number;
+  sortBy?: 'price' | 'rating' | 'distance' | 'newest';
+  page?: number;
+  limit?: number;
 }
 
 

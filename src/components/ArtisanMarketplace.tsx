@@ -1,5 +1,10 @@
 import React from 'react';
 import { ShoppingBag, Star, Truck, Award } from 'lucide-react';
+import { SearchFilters } from '../types';
+
+interface ArtisanMarketplaceProps {
+  searchFilters?: SearchFilters;
+}
 
 const products = [
   {
@@ -52,7 +57,52 @@ const products = [
   }
 ];
 
-const ArtisanMarketplace = () => {
+const ArtisanMarketplace: React.FC<ArtisanMarketplaceProps> = ({ searchFilters }) => {
+  // Filter products based on search filters
+  const filteredProducts = products.filter((product) => {
+    if (searchFilters?.query) {
+      const query = searchFilters.query.toLowerCase();
+      if (!product.name.toLowerCase().includes(query) &&
+          !product.artisan.toLowerCase().includes(query) &&
+          !product.location.toLowerCase().includes(query)) {
+        return false;
+      }
+    }
+
+    if (searchFilters?.state) {
+      const state = searchFilters.state.toLowerCase();
+      if (!product.location.toLowerCase().includes(state)) {
+        return false;
+      }
+    }
+
+    if (searchFilters?.categories && searchFilters.categories.length > 0) {
+      // For marketplace, we can map categories to product types
+      const productCategories = ['handicrafts', 'textiles', 'jewelry', 'art'];
+      const hasMatchingCategory = searchFilters.categories.some(cat =>
+        productCategories.includes(cat.toLowerCase()) ||
+        product.name.toLowerCase().includes(cat.toLowerCase()) ||
+        product.badge.toLowerCase().includes(cat.toLowerCase())
+      );
+      if (!hasMatchingCategory) {
+        return false;
+      }
+    }
+
+    if (searchFilters?.minPrice && parseInt(product.price.replace(/[^\d]/g, '')) < searchFilters.minPrice) {
+      return false;
+    }
+
+    if (searchFilters?.maxPrice && parseInt(product.price.replace(/[^\d]/g, '')) > searchFilters.maxPrice) {
+      return false;
+    }
+
+    if (searchFilters?.rating && product.rating < searchFilters.rating) {
+      return false;
+    }
+
+    return true;
+  });
   return (
     <section className="py-20 bg-gradient-to-br from-amber-50 to-orange-50" id="artisans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -82,7 +132,7 @@ const ArtisanMarketplace = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <div key={product.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
               <div className="relative overflow-hidden">
                 <img
@@ -102,7 +152,7 @@ const ArtisanMarketplace = () => {
 
               <div className="p-4">
                 <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
-                
+
                 <div className="text-sm text-gray-600 mb-2">
                   <div>{product.artisan}</div>
                   <div>{product.location}</div>
@@ -128,6 +178,18 @@ const ArtisanMarketplace = () => {
             </div>
           ))}
         </div>
+
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No products found matching your search criteria.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-amber-500 text-white px-6 py-2 rounded-lg hover:bg-amber-600"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
 
         <div className="text-center mt-12">
           <button className="bg-amber-500 text-white px-8 py-3 rounded-full hover:bg-amber-600 transition-colors font-medium">

@@ -7,6 +7,11 @@ export const bookingService = {
     return response.data;
   },
 
+  async getGuideBookings(guideId: string) {
+    const response = await api.get(`/bookings/guide/${guideId}`);
+    return response.data;
+  },
+
   async createBooking(data: {
     type: 'hotel' | 'experience';
     hotelId?: string;

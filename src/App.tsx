@@ -8,6 +8,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import TouristDashboard from './pages/TouristDashboard';
+import GuideDashboard from './pages/GuideDashboard';
 
 const App: React.FC = () => {
   return (
@@ -20,13 +21,21 @@ const App: React.FC = () => {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
-              <Route 
-                path="/tourist-dashboard" 
+              <Route
+                path="/tourist-dashboard"
                 element={
                   <ProtectedRoute requiredRole="tourist">
                     <TouristDashboard />
                   </ProtectedRoute>
-                } 
+                }
+              />
+              <Route
+                path="/guide-dashboard"
+                element={
+                  <ProtectedRoute requiredRole="guide">
+                    <GuideDashboard />
+                  </ProtectedRoute>
+                }
               />
             </Routes>
           </main>

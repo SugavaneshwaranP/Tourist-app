@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
       const response = await authService.login({ email, password });
       localStorage.setItem('token', response.token);
-      setUser(response.data.user);
+      setUser(response.data.data.user);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Login failed');
       throw error;
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
       const response = await authService.register(data);
       localStorage.setItem('token', response.token);
-      setUser(response.data.user);
+      setUser(response.data.data.user);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Registration failed');
       throw error;

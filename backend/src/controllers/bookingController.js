@@ -125,6 +125,30 @@ export const getMyBookings = async (req, res) => {
   }
 };
 
+// Get all bookings for a guide's experiences
+export const getGuideBookings = async (req, res) => {
+  try {
+    const guideId = req.params.guideId;
+
+    // First get all experiences by this guide
+    const guideExperiences = await Experience.find({ 'host.user': guideId });
+    const experienceIds = guideExperiences.map(exp => exp._id);
+
+    // Then get all bookings for those experiences
+    const bookings = await Booking.find({
+      type: 'experience',
+      itemId: { $in: experienceIds }
+    })
+      .populate('userId', 'name email')
+      .populate('itemId', 'title location')
+      .sort({ createdAt: -1 });
+
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Update a booking
 export const updateBooking = async (req, res) => {
   try {

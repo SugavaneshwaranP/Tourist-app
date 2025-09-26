@@ -5,7 +5,7 @@ import LocalExperiences from '../components/LocalExperiences';
 import LocalGuides from '../components/LocalGuides';
 import ArtisanMarketplace from '../components/ArtisanMarketplace';
 import Map, { MapMarker } from '../components/Map';
-import { Booking } from '../types';
+import { Booking, SearchFilters } from '../types';
 import { bookingService } from '../services/booking';
 import { Search, MapPin, Calendar, Filter } from 'lucide-react';
 
@@ -41,12 +41,56 @@ const TouristDashboard: React.FC = () => {
     }
   };
 
+  // Function to generate dynamic markers based on active tab and filters
+  const generateMarkers = (): MapMarker[] => {
+    const filters: SearchFilters = {
+      query: searchQuery || undefined,
+      state: selectedState || undefined,
+      date: selectedDate || undefined,
+      categories: selectedCategories
+    };
+
+    // Default markers for famous spots
+    const defaultMarkers: MapMarker[] = [
+      { lat: 27.1751, lng: 78.0421, title: 'Taj Mahal, Agra', id: 'taj-mahal' },
+      { lat: 28.6139, lng: 77.2090, title: 'Red Fort, Delhi', id: 'red-fort' },
+      { lat: 12.9716, lng: 77.5946, title: 'Bangalore Palace', id: 'bangalore-palace' },
+      { lat: 13.0827, lng: 80.2707, title: 'Marina Beach, Chennai', id: 'marina-beach' },
+      { lat: 22.5726, lng: 88.3639, title: 'Victoria Memorial, Kolkata', id: 'victoria-memorial' },
+      { lat: 19.0760, lng: 72.8777, title: 'Gateway of India, Mumbai', id: 'gateway-india' }
+    ];
+
+    // Filter default markers based on search criteria
+    let markers = defaultMarkers.filter(marker => {
+      if (filters.query) {
+        const query = filters.query.toLowerCase();
+        if (!marker.title.toLowerCase().includes(query)) {
+          return false;
+        }
+      }
+      if (filters.state) {
+        const state = filters.state.toLowerCase();
+        if (!marker.title.toLowerCase().includes(state)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // If no markers match the filters, return default markers
+    if (markers.length === 0) {
+      markers = defaultMarkers;
+    }
+
+    return markers;
+  };
+
   // Function to render the active tab content
   const renderTabContent = () => {
-    const filters = {
-      query: searchQuery,
-      state: selectedState,
-      date: selectedDate,
+    const filters: SearchFilters = {
+      query: searchQuery || undefined,
+      state: selectedState || undefined,
+      date: selectedDate || undefined,
       categories: selectedCategories
     };
 
@@ -54,11 +98,11 @@ const TouristDashboard: React.FC = () => {
       case 'stays':
         return <LocalStays searchFilters={filters} />;
       case 'experiences':
-        return <LocalExperiences />;
+        return <LocalExperiences searchFilters={filters} />;
       case 'guides':
-        return <LocalGuides />;
+        return <LocalGuides searchFilters={filters} />;
       case 'marketplace':
-        return <ArtisanMarketplace />;
+        return <ArtisanMarketplace searchFilters={filters} />;
       case 'bookings':
         if (loading) {
           return (
@@ -84,19 +128,19 @@ const TouristDashboard: React.FC = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-lg font-semibold">
-                      {booking.type === 'hotel' ? booking.hotel?.name : booking.experience?.title}
+                      {typeof booking.itemId === 'object' && 'title' in booking.itemId ? booking.itemId.title : typeof booking.itemId === 'object' && 'name' in booking.itemId ? booking.itemId.name : 'N/A'}
                     </h3>
                     <p className="text-gray-600 mt-1">
-                      {booking.type === 'hotel' ? booking.hotel?.location.city : booking.experience?.location.city}
+                      {typeof booking.itemId === 'object' && booking.itemId.location?.city}
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    (booking.bookingStatus || booking.status) === 'confirmed' ? 'bg-green-100 text-green-800' :
+                    (booking.bookingStatus || booking.status) === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    (booking.bookingStatus || booking.status) === 'cancelled' ? 'bg-red-100 text-red-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                    {(booking.bookingStatus || booking.status)?.charAt(0).toUpperCase() + (booking.bookingStatus || booking.status)?.slice(1)}
                   </span>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
@@ -106,18 +150,18 @@ const TouristDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-gray-500">Check-out</p>
-                    <p className="font-medium">{new Date(booking.endDate).toLocaleDateString()}</p>
+                    <p className="font-medium">{booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Guests</p>
-                    <p className="font-medium">{booking.guests}</p>
+                    <p className="font-medium">{booking.guests.adults + booking.guests.children}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Total Price</p>
-                    <p className="font-medium">${booking.totalPrice}</p>
+                    <p className="font-medium">${booking.amount?.total || booking.totalPrice}</p>
                   </div>
                 </div>
-                {booking.status === 'pending' && (
+                {(booking.bookingStatus || booking.status) === 'pending' && (
                   <div className="mt-4 flex justify-end">
                     <button
                       onClick={() => bookingService.cancelBooking(booking._id)}
@@ -265,14 +309,7 @@ const TouristDashboard: React.FC = () => {
             <Map
               center={currentLocation || { lat: 20.5937, lng: 78.9629 }} // Default to India center
               zoom={currentLocation ? 12 : 5}
-              markers={[
-                { lat: 27.1751, lng: 78.0421, title: 'Taj Mahal, Agra', id: 'taj-mahal' },
-                { lat: 28.6139, lng: 77.2090, title: 'Red Fort, Delhi', id: 'red-fort' },
-                { lat: 12.9716, lng: 77.5946, title: 'Bangalore Palace', id: 'bangalore-palace' },
-                { lat: 13.0827, lng: 80.2707, title: 'Marina Beach, Chennai', id: 'marina-beach' },
-                { lat: 22.5726, lng: 88.3639, title: 'Victoria Memorial, Kolkata', id: 'victoria-memorial' },
-                { lat: 19.0760, lng: 72.8777, title: 'Gateway of India, Mumbai', id: 'gateway-india' }
-              ]}
+              markers={generateMarkers()}
               onMarkerClick={(marker: MapMarker) => {
                 console.log('Marker clicked:', marker);
                 // TODO: Navigate to relevant tab or show details

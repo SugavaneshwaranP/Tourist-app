@@ -1,5 +1,10 @@
 import React from 'react';
 import { Star, MapPin, Languages, Award, MessageCircle } from 'lucide-react';
+import { SearchFilters } from '../types';
+
+interface LocalGuidesProps {
+  searchFilters?: SearchFilters;
+}
 
 const guides = [
   {
@@ -46,7 +51,41 @@ const guides = [
   }
 ];
 
-const LocalGuides = () => {
+const LocalGuides: React.FC<LocalGuidesProps> = ({ searchFilters }) => {
+  // Filter guides based on search filters
+  const filteredGuides = guides.filter((guide) => {
+    if (searchFilters?.query) {
+      const query = searchFilters.query.toLowerCase();
+      if (!guide.name.toLowerCase().includes(query) &&
+          !guide.location.toLowerCase().includes(query) &&
+          !guide.speciality.toLowerCase().includes(query)) {
+        return false;
+      }
+    }
+
+    if (searchFilters?.state) {
+      const state = searchFilters.state.toLowerCase();
+      if (!guide.location.toLowerCase().includes(state)) {
+        return false;
+      }
+    }
+
+    if (searchFilters?.categories && searchFilters.categories.length > 0) {
+      const hasMatchingCategory = searchFilters.categories.some(cat =>
+        guide.speciality.toLowerCase().includes(cat.toLowerCase()) ||
+        cat.toLowerCase() === 'local-guides'
+      );
+      if (!hasMatchingCategory) {
+        return false;
+      }
+    }
+
+    if (searchFilters?.rating && guide.rating < searchFilters.rating) {
+      return false;
+    }
+
+    return true;
+  });
   return (
     <section className="py-20 bg-gray-50" id="guides">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -60,7 +99,7 @@ const LocalGuides = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {guides.map((guide) => (
+          {filteredGuides.map((guide) => (
             <div key={guide.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
               <div className="relative p-6 pb-4">
                 <div className="flex items-start space-x-4">
@@ -72,7 +111,7 @@ const LocalGuides = () => {
                     />
                     <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="text-xl font-bold text-gray-900">{guide.name}</h3>
@@ -80,12 +119,12 @@ const LocalGuides = () => {
                         {guide.badge}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center space-x-1 mb-2">
                       <MapPin className="h-4 w-4 text-gray-500" />
                       <span className="text-gray-600 text-sm">{guide.location}</span>
                     </div>
-                    
+
                     <div className="flex items-center space-x-3 text-sm text-gray-600 mb-3">
                       <div className="flex items-center space-x-1">
                         <Star className="h-4 w-4 text-yellow-500 fill-current" />
@@ -105,12 +144,12 @@ const LocalGuides = () => {
                     <span className="font-semibold text-gray-900">Speciality</span>
                     <span className="text-teal-600 font-medium">{guide.speciality}</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-semibold text-gray-900">Experience</span>
                     <span className="text-gray-600">{guide.experience}</span>
                   </div>
-                  
+
                   <div className="flex items-center space-x-1 mb-3">
                     <Languages className="h-4 w-4 text-gray-500" />
                     <span className="text-sm text-gray-600">
@@ -139,6 +178,18 @@ const LocalGuides = () => {
             </div>
           ))}
         </div>
+
+        {filteredGuides.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No guides found matching your search criteria.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
 
         <div className="text-center mt-12">
           <button className="border-2 border-teal-600 text-teal-600 px-8 py-3 rounded-full hover:bg-teal-600 hover:text-white transition-colors font-medium">
