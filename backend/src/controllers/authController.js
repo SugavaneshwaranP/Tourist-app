@@ -23,8 +23,15 @@ export const signup = async (req, res) => {
       location
     } = req.body;
 
+    // Generate a unique userId based on role and timestamp
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 7);
+    const rolePrefix = role.charAt(0).toUpperCase(); // T for tourist, G for guide, etc.
+    const userId = `${rolePrefix}${timestamp}${random}`.toUpperCase();
+
     // Create user based on role
     const userData = {
+      userId,
       role,
       name,
       email,
@@ -49,26 +56,13 @@ export const signup = async (req, res) => {
 
     const user = await User.create(userData);
 
-    // Generate verification codes
-    const emailCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const phoneCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    user.verificationCodes = {
-      email: emailCode,
-      phone: phoneCode
-    };
-    await user.save({ validateBeforeSave: false });
-
-    // Send verification codes
-    await sendVerificationEmail(user.email, emailCode);
-    await sendVerificationSMS(user.phone, phoneCode);
-
-    // Create token
+    // Create JWT token
     const token = signToken(user._id);
 
     // Remove password from output
     user.password = undefined;
 
+    // Send response
     res.status(201).json({
       status: 'success',
       token,
@@ -115,6 +109,32 @@ export const login = async (req, res) => {
     res.status(200).json({
       status: 'success',
       token,
+      data: {
+        user
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+export const getMe = async (req, res) => {
+  try {
+    // Get user from middleware
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
       data: {
         user
       }

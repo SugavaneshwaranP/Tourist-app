@@ -1,29 +1,40 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
-import Hero from './components/Hero';
-import FeaturedDestinations from './components/FeaturedDestinations';
-import LocalExperiences from './components/LocalExperiences';
-import LocalStays from './components/LocalStays';
-import ArtisanMarketplace from './components/ArtisanMarketplace';
-import LocalGuides from './components/LocalGuides';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import TouristDashboard from './pages/TouristDashboard';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-white">
-        <Header />
-        <Hero />
-        <FeaturedDestinations />
-        <LocalExperiences />
-        <LocalStays />
-        <ArtisanMarketplace />
-        <LocalGuides />
-        <Footer />
-      </div>
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <div className="min-h-screen bg-white flex flex-col">
+          <Header />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route 
+                path="/tourist-dashboard" 
+                element={
+                  <ProtectedRoute requiredRole="tourist">
+                    <TouristDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </AuthProvider>
+    </Router>
   );
-}
+};
 
 export default App;

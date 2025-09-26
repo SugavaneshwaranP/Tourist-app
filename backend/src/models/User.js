@@ -32,8 +32,11 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 8,
-    select: false
+    minlength: 8
+  },
+  verified: {
+    type: Boolean,
+    default: true
   },
   // Tourist specific fields
   preferences: [{

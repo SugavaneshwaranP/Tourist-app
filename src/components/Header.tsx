@@ -85,11 +85,11 @@ const Header: React.FC = () => {
                   ) : (
                     <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
                       <span className="text-orange-500 font-medium">
-                        {user.name.charAt(0).toUpperCase()}
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                       </span>
                     </div>
                   )}
-                  <span className="font-medium">{user.name}</span>
+                  <span className="font-medium">{user.name || 'User'}</span>
                 </button>
 
                 {/* User dropdown menu */}

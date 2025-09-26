@@ -1,4 +1,75 @@
+// Auth types
+export type UserRole = 'tourist' | 'guide' | 'agency' | 'hotel' | 'admin';
+
+export interface User {
+  _id: string;
+  userId: string;
+  role: UserRole;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  verified?: boolean;
+  createdAt?: Date;
+  preferences?: string[];
+  expertise?: string[];
+  languages?: string[];
+  businessName?: string;
+  location?: {
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+  };
+  avatar?: string;
+}
+
+export interface AuthResponse {
+  status: string;
+  token: string;
+  data: {
+    user: Omit<User, 'password'>;
+  };
+}
+
+export interface Booking {
+  _id: string;
+  user: string | User;
+  type: 'hotel' | 'experience';
+  hotel?: {
+    _id: string;
+    name: string;
+    location: Location;
+    image: string;
+  };
+  experience?: {
+    _id: string;
+    title: string;
+    location: Location;
+    image: string;
+  };
+  startDate: Date;
+  endDate: Date;
+  guests: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  totalPrice: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ApiResponse<T> {
+  status: string;
+  data: T;
+}
+
 // Common types
+export interface ListResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface Location {
   address: string;
   city: string;
@@ -100,64 +171,4 @@ export interface Experience {
   tags: string[];
 }
 
-// Booking types
-export interface Booking {
-  _id: string;
-  user: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  type: 'hotel' | 'experience';
-  item: Hotel | Experience;
-  startDate: Date;
-  endDate: Date;
-  guests: {
-    adults: number;
-    children: number;
-  };
-  totalAmount: {
-    amount: number;
-    currency: string;
-  };
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  paymentStatus: 'pending' | 'paid' | 'refunded';
-  specialRequests?: string;
-}
 
-// Authentication types
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin' | 'guide';
-  avatar?: string;
-  preferences?: {
-    interests: string[];
-    preferredDestinations: string[];
-    budget: {
-      min: number;
-      max: number;
-    };
-  };
-}
-
-export interface AuthResponse {
-  success: boolean;
-  token: string;
-  user: User;
-}
-
-// API response types
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
-export interface ListResponse<T> {
-  success: boolean;
-  count: number;
-  data: T[];
-  message?: string;
-}

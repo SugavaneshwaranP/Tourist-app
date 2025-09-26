@@ -20,8 +20,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Import routes
+import hotelRoutes from './routes/hotelRoutes.js';
+import experienceRoutes from './routes/experienceRoutes.js';
+
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/hotels', hotelRoutes);
+app.use('/api/experiences', experienceRoutes);
+
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    status: 'error',
+    message: err.message || 'Something went wrong!'
+  });
+});
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)

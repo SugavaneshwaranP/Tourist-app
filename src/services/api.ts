@@ -12,7 +12,7 @@ import type {
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
@@ -30,8 +30,8 @@ api.interceptors.request.use((config) => {
 
 // Auth services
 export const authService = {
-  async register(data: { name: string; email: string; password: string; phone?: string }) {
-    const response = await api.post<AuthResponse>('/auth/register', data);
+  async register(data: Omit<User, '_id' | 'userId' | 'verified' | 'createdAt'>) {
+    const response = await api.post<AuthResponse>('/auth/signup', data);
     return response.data;
   },
 
@@ -41,7 +41,17 @@ export const authService = {
   },
 
   async getProfile() {
-    const response = await api.get<ApiResponse<User>>('/auth/me');
+    const response = await api.get<ApiResponse<{ user: User }>>('/auth/me');
+    return response.data;
+  },
+
+  async verifyEmail(email: string, code: string) {
+    const response = await api.post<{ status: string; message: string }>('/auth/verify-email', { email, code });
+    return response.data;
+  },
+
+  async verifyPhone(phone: string, code: string) {
+    const response = await api.post<{ status: string; message: string }>('/auth/verify-phone', { phone, code });
     return response.data;
   }
 };

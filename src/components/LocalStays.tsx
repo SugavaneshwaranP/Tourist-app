@@ -13,7 +13,16 @@ interface Filters {
   amenities: string[];
 }
 
-const LocalStays: React.FC = () => {
+interface LocalStaysProps {
+  searchFilters?: {
+    query: string;
+    state: string;
+    date: string;
+    categories: string[];
+  };
+}
+
+const LocalStays: React.FC<LocalStaysProps> = ({ searchFilters }) => {
   const { user } = useAuth();
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,19 +38,37 @@ const LocalStays: React.FC = () => {
 
   useEffect(() => {
     fetchHotels();
-  }, []);
+  }, [filters, searchFilters]);
 
   const fetchHotels = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await hotelService.getHotels({
+      const params: any = {
         city: filters.city || undefined,
         minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
         maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
         amenities: filters.amenities.length > 0 ? filters.amenities : undefined
-      });
-      setHotels(response.data);
+      };
+
+      // Integrate dashboard search filters
+      if (searchFilters) {
+        if (searchFilters.query) {
+          params.query = searchFilters.query;
+        }
+        if (searchFilters.state) {
+          params.state = searchFilters.state;
+        }
+        if (searchFilters.date) {
+          params.checkInDate = searchFilters.date;
+        }
+        if (searchFilters.categories.includes('hotels')) {
+          // Already hotels, but ensure
+        }
+      }
+
+      const response = await hotelService.getHotels(params);
+      setHotels(response.items || []);
     } catch (error: any) {
       setError(error.message || 'Failed to fetch hotels');
     } finally {
